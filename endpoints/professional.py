@@ -3,7 +3,8 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 import time
 # Import the database and models
-from database.models import db, Customer, Professional, Offer ,Work
+from database.models import db, Customer, Professional, Offer ,Work , discover_works
+
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 from functools import wraps
@@ -34,7 +35,7 @@ def professional_discover():
         db.session.add(Offer(work_name=work_name, target=target, od_amount=o_amount, od_date=od_date, source=source))
         db.session.commit()
         return jsonify({'message': 'Offer created'})
-    return jsonify({'message': 'Professional discover'})
+    return discover_works(get_jwt_identity())
 
 
 @professional.route('/your_work', methods=['POST', 'GET'], endpoint='professional-your-work')
@@ -98,7 +99,7 @@ def professional_your_work():
                 return jsonify({'message': 'Invalid operation'})
         else:   
             return jsonify({'message': 'No offer with this id'})
-    return jsonify({'message': 'Professional your work'})
+    return get_works_service(get_jwt_identity())
 
 
 @professional.route('/profile', methods=['POST', 'GET'], endpoint='professional-profile')
@@ -108,4 +109,4 @@ def professional_profile():
         Professional.query.filter_by(id=get_jwt_identity()).update({'city': request.json.get('city')})
         db.session.commit()
         return jsonify({'message': 'City updated'})
-    return jsonify({'message': 'Professional profile'})
+    return get_professional_json(get_jwt_identity())

@@ -4,7 +4,7 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 import time
 from endpoints.auth import role_required
 from datetime import datetime
-from database.models import db, Customer, Professional, Offer, Location, Service, func, Work
+from database.models import db, Customer, Professional, Offer, Location, Service, func, Work, get_customer_json
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 import numpy as np
@@ -67,8 +67,7 @@ def customer_my_work():
         db.session.commit()
         return jsonify({'message': 'Offer created'})
 
-
-    return jsonify({'message': 'Customer my work'})
+    return get_works_offers_json(get_jwt_identity())
 
 
 @customer.route('/my_work/update', methods=['POST', 'GET'], endpoint='customer-my-work-update')
@@ -147,6 +146,7 @@ def customer_my_work_update():
                     ratings =   [rating[0] for rating in ratings]
                     professional = Professional.query.get(prof_id)
                     professional.rating=np.median(ratings)
+                    professional.experience=len(ratings)
                     db.session.commit()
                     return jsonify({'msg':'done'})
                 else:
@@ -161,7 +161,6 @@ def customer_profile():
         Customer.query.filter_by(id=get_jwt_identity()).update({'city': request.json.get('city')})
         db.session.commit()
         return jsonify({'message': 'City updated'})
-    name = Customer.query.filter_by(id=get_jwt_identity()).first().name
-    city = Customer.query.filter_by(id=get_jwt_identity()).first().city
-    return jsonify({'name': name, 'city': city})
+    
+    return get_customer_json(get_jwt_identity())
     
