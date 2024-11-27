@@ -7,6 +7,7 @@ from datetime import datetime
 from database.models import db, Customer, Professional, Offer, Location, Service, func, Work
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+import numpy as np
 # Import the database and models, 
 
 customer = Blueprint('customer', __name__)
@@ -76,30 +77,32 @@ def customer_my_work_update():
     if request.method == 'POST':
         opr = request.json.get('operation')
         oid = request.json.get('offer_id')
-        work_name=Offer.query.filter_by(id=oid).first().work_name
         od_amount=request.json.get('amount')
-        od_date=request.json.get('date')
+        od_date=datetime.strptime(request.json.get('date'), '%Y-%m-%d')
         cid = get_jwt_identity()
         if Offer.query.filter_by(id=oid).first():
-            offer =Offer.query.filter_by(id=oid).first()
+            offl=Offer.query.filter_by(id=oid)
+            offer =offl.first()
+            work_name=offer.work_name
+            workl = Work.query.filter_by(name=offer.work_name)
             if opr=='accept':
                 if offer.target==cid and offer.status=='pending':
                     try:
-                        Offer.query.filter_by(work_name=work_name).update({'status': 'rejected'})
+                        Offer.query.filter_by(work_name=offer.work_name).update({'status': 'rejected'})
                         logging.info('Successfully updated Offers with work_name = %s to status = rejected', work_name)
                     except Exception as e:
                         logging.error('Error updating Offers with work_name = %s: %s', work_name, e)
 
                     # 2. Update the Work where name matches
                     try:
-                        Work.query.filter_by(name=work_name).update({'status': 'closed', 'amount': od_amount, 'date': od_date})
+                        workl.update({'status': 'closed', 'amount': od_amount, 'date': od_date})
                         logging.info('Successfully updated Work with name = %s to status = closed, amount = %s, date = %s', work_name, od_amount, od_date)
                     except Exception as e:
                         logging.error('Error updating Work with name = %s: %s', work_name, e)
 
                     # 3. Update the Offer where id matches
                     try:
-                        Offer.query.filter_by(id=oid).update({'status': 'accepted'})
+                        offl.update({'status': 'accepted'})
                         logging.info('Successfully updated Offer with id = %s to status = accepted', oid)
                     except Exception as e:
                         logging.error('Error updating Offer with id = %s: %s', oid, e)
@@ -107,18 +110,19 @@ def customer_my_work_update():
 
                     return jsonify({'message': 'Offer accepted'})
                 else:
-                    return jsonify({'message': 'Offer cant be accepted'})
+                    return jsonify({'message': 'Offer cant be accepted1'})
             elif opr=='reject':
-                if (offer.target==cid or offer.source ==cid) and (offer.status=='pending' or offer.status == 'accepted'): 
-                    Offer.query.filter_by(id=oid).update({'status': 'rejected'})
+                if (offer.target==cid or offer.source ==cid) and (offer.status=='pending'): 
+                    offl.update({'status': 'rejected'})
                     logging.info('Successfully updated Offer with id = %s to status = rejected', oid)
+                    db.session.commit()
                     return jsonify({'message': 'Offer rejected'})
                 else:
-                    return jsonify({'message': 'Offer cant be rejected'})
+                    return jsonify({'message': 'Offer cant be rejected2'})
             elif opr=='abandon':
-                if (offer.target==cid or offer.source ==cid) and offer.status=='pending':
-                    Work.query.filter_by(name=offer.work_name).update({'status':'open'})
-                    Offer.query.filter_by(id=oid).update({'status': 'rejected'})
+                if (offer.target==cid or offer.source ==cid) and offer.status=='accepted':
+                    workl.update({'status':'open'})
+                    offl.update({'status': 'rejected'})
                     logging.info('Successfully updated Offer with id = %s to status = rejected', oid)
                     db.session.commit()
                     return jsonify({'message': 'Offer abandoned'})
@@ -126,19 +130,29 @@ def customer_my_work_update():
                     return jsonify({'message': 'Offer cant be abandoned'})
             elif opr=='done':
                 if (offer.target==cid or offer.source==cid) and (offer.status=='accepted'):
-                    Work.query.filter_by(name=offer.work_name).update({'status':'done'})
-                    Offer.query.filter_by(id=oid).update({'status':'done'})
+                    workl.update({'status':'done'})
+                    offl.update({'status':'done'})
                     rating =request.json.get('rating')
-                    profi =request.json.get('professional_id')
                     if offer.target==cid:
-                        Work.query.filter_by(name=offer.work_name).update({'professional_id':offer.source, rating:rating})
+                        prof_id=offer.source
+                        workl.update({'professional_id':offer.source, 'rating':rating})
                         logging.info('Successfully updated Work with name = %s to professional_id = %s', offer.work_name, offer.source)
                     elif offer.source==cid:
-                        Work.query.filter_by(name=offer.work_name).update({'professional_id':offer.target, rating:rating})
+                        prof_id=offer.target
+                        workl.update({'professional_id':offer.target, 'rating':rating})
                         logging.info('Successfully updated Work with name = %s to professional_id = %s', offer.work_name, offer.target)
+                    else:
+                        return jsonify({'msg':'user is not allowed to do this'})
                     ratings = db.session.query(Work.rating).filter_by(professional_id=prof_id).all()
                     ratings =   [rating[0] for rating in ratings]
-                    db.session.cmomit()
+                    professional = Professional.query.get(prof_id)
+                    professional.rating=np.median(ratings)
+                    db.session.commit()
+                    return jsonify({'msg':'done'})
+                else:
+                    return jsonify({'msg':'operation failed'})
+        return jsonify({'msg':'ayyeein post'})
+    return jsonify({'msg':'ayyeein'})
 #####################
 @customer.route('/profile', methods=['POST', 'GET'], endpoint='customer-profile')
 @role_required('customer') 
