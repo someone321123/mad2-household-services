@@ -3,10 +3,9 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 import time
 # Import the database and models
-from database.models import db, Customer, Professional
+from database.models import db, Customer, Professional, Offer
 from functools import wraps
 from datetime import datetime
-from database.models import Offer
 professional = Blueprint('professional', __name__)
 
 
