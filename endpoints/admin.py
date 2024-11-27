@@ -5,10 +5,11 @@ import time
 from endpoints.auth import role_required
 # Import the database and models
 from database.models import db, Customer, Professional, Offer, Location, Service, func, Work
-
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 admin = Blueprint('admin', __name__)
 @admin.route('/dashboard', methods = ['POST','GET'], endpoint = 'admin-dashboard')
-@role_required('admin')  
+#@role_required('admin')  
 def admin_dashboard():
     if request.method == 'POST':
         prof = request.json.get('professional_id')
@@ -21,8 +22,55 @@ def admin_dashboard():
         elif approval == "F":
             profe = Professional.query.filter_by(id=prof).first()
             profe.approval = "F"
-            Offer.query.filter_by(source=prof).update({'status': 'rejected'})
-            Offer.query.filter_by(target=prof).update({'status': 'rejected'})
+            
+
+            # Set up logging
+            
+
+            try:
+                Offer.query.filter_by(source=prof, status='pending').update({'status': 'rejected'})
+                logging.info('Updated Offer records where source = %s and status = pending', prof)
+            except Exception as e:
+                logging.error('Error updating Offer records for source = %s and status = pending: %s', prof, e)
+
+            try:
+                Offer.query.filter_by(target=prof, status='pending').update({'status': 'rejected'})
+                logging.info('Updated Offer records where target = %s and status = pending', prof)
+            except Exception as e:
+                logging.error('Error updating Offer records for target = %s and status = pending: %s', prof, e)
+            
+            try:
+                Offer.query.filter_by(source=prof, status='accepted').update({'status': 'rejected'})
+                logging.info('Updated Offer records where source = %s and status = accepted', prof)
+            except Exception as e:
+                logging.error('Error updating Offer records for source = %s and status = pending: %s', prof, e)
+
+            try:
+                Offer.query.filter_by(target=prof, status='accepted').update({'status': 'rejected'})
+                logging.info('Updated Offer records where target = %s and status = accepted', prof)
+            except Exception as e:
+                logging.error('Error updating Offer records for target = %s and status = pending: %s', prof, e)
+
+            try:
+                accepted_offer = Offer.query.filter_by(source=prof, status='accepted').first()
+                if accepted_offer:
+                    Work.query.filter_by(name=accepted_offer.work_name).update({'status': 'open'})
+                    logging.info('Updated Work record where work = %s', accepted_offer.work_name)
+                else:
+                    logging.warning('No accepted offer found for source = %s', prof)
+            except Exception as e:
+                logging.error('Error updating Work record for source = %s and accepted status: %s', prof, e)
+
+            try:
+                accepted_offer = Offer.query.filter_by(target=prof, status='accepted').first()
+                if accepted_offer:
+                    Work.query.filter_by(name=accepted_offer.work_name).update({'status': 'open'})
+                    logging.info('Updated Work record where work = %s', accepted_offer.work_name)
+                else:
+                    logging.warning('No accepted offer found for target = %s', prof)
+            except Exception as e:
+                logging.error('Error updating Work record for target = %s and accepted status: %s', prof, e)
+
             db.session.commit()
             return jsonify({'message': 'Professional unapproved'})
         else:

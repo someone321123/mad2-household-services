@@ -56,8 +56,7 @@ def register():
                 return jsonify({'message': 'Username already in use'}), 400
             new_user = Professional(
                 name=username,
-                service=service,
-                id=time.time(),  # Generate unique ID
+                service=service, 
                 city=city,
                 approval='F'
             )
@@ -66,7 +65,6 @@ def register():
                 return jsonify({'message': 'Username already in use'}), 400
             new_user = Customer(
                 name=username,
-                id=time.time(),  # Generate unique ID
                 city=city
             )
 
