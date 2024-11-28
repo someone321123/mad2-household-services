@@ -1,6 +1,6 @@
 <template>
   <nav>
-    <ul v-if="type === 'admin'">
+    <ul >
       <li><router-link to="/admin/dashboard">Dashboard</router-link></li>
       <li><router-link to="/admin/statistics">Statistics</router-link></li>
       <li><router-link to="/admin/export-csv">Export CSV</router-link></li>

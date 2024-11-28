@@ -21,7 +21,7 @@ def login():
             user = Customer.query.filter_by(name = name).first()
         if user and user.check_password(password):
             access_token = create_access_token(identity = user.id, additional_claims={'role': user.role})
-            return jsonify(access_token = access_token)
+            return jsonify(access_token = access_token,role=user.role)
         else:
             return jsonify({ 'message': 'Invalid credentials' }), 401
     except Exception as e:
@@ -88,19 +88,6 @@ def register():
         except Exception as e:
             return jsonify({'message': 'An error occurred', 'error': str(e)}), 500
 
-@auth_router.route('/admin', methods = ['GET'], endpoint = 'auth-admin')
-@jwt_required()
-def admin():
-    try:
-        current_user_id = get_jwt_identity()
-        if Customer.query.filter_by(id=current_user_id).first():
-
-            if Customer.query.filter_by(id=current_user_id).first().name == 'admin':
-                return jsonify({ 'message': 'You are an admin' })
-            else:
-                return jsonify({ 'message': 'You are NOT an admin' }), 403
-    except Exception as e:
-        return jsonify({ 'message': 'An unexpected error occurred', 'error': str(e) }), 500
 from functools import wraps
 from flask import jsonify
 

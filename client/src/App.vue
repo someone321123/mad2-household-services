@@ -1,21 +1,13 @@
 <script>
-import Navbar from './components/Navbar.vue'
+import NavBarShared from './components/NavBarShared.vue';
 
 export default {
-  name: "App",
-  data() {
-    return {role: this.$store.state.auth.role}
-  },
-  components: {
-    Navbar
-  }
+  name: "App"
 }
 </script>
 
 <template>
   <div>
-    <Navbar type="admin" v-if="role==='admin'" />
-
     <div class="container p-4">
       <router-view></router-view>
     </div>

@@ -20,6 +20,14 @@ export default createRouter({
       name: "Register",
       component: () => import("../components/Register.vue"),
     },
+    {
+      path: "/administrator",
+      name: "administrator",
+      component: () => import("../views/Administrator.vue"),
+    },
+    {
+      
+    }
   ],
 });
 
