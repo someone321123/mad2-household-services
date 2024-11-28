@@ -4,7 +4,7 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 import time
 from endpoints.auth import role_required
 from datetime import datetime
-from database.models import db, Customer, Professional, Offer, Location, Service, func, Work, get_customer_json
+from database.models import db, Customer, Professional, Offer, Location, Service, func, Work, get_customer_json, my_work
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 import numpy as np
@@ -67,7 +67,7 @@ def customer_my_work():
         db.session.commit()
         return jsonify({'message': 'Offer created'})
 
-    return get_works_offers_json(get_jwt_identity())
+    return my_work(get_jwt_identity())
 
 
 @customer.route('/my_work/update', methods=['POST', 'GET'], endpoint='customer-my-work-update')

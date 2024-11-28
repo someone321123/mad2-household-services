@@ -43,15 +43,12 @@ db.create_all()
 make_data()
 
 
-@app.route('/get-cities-services', methods=['GET'])
+@app.route('/hello_world', methods=['GET'])
 def get_cities_and_services():
     cities = Location.query.all()
     services = Service.query.all()
-
-    # Convert rows to list of dictionaries
-    cities_data = [{'id': city.id, 'name': city.name} for city in cities]
-    services_data = [{'id': service.id, 'name': service.name, 'base': service.base} for service in services]
-
+    cities_data = [{'id': city.id, 'name': city.city,'state':city.state} for city in cities]
+    services_data = [{'id': service.id, 'name': service.service, 'base': service.base} for service in services]
     return jsonify({'cities': cities_data, 'services': services_data})
 
 if __name__ == '__main__':

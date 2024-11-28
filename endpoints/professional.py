@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 import time
 # Import the database and models
-from database.models import db, Customer, Professional, Offer ,Work , discover_works
+from database.models import db, Customer, Professional, Offer ,Work , discover_works,your_works,get_professional_json
 
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -99,7 +99,8 @@ def professional_your_work():
                 return jsonify({'message': 'Invalid operation'})
         else:   
             return jsonify({'message': 'No offer with this id'})
-    return get_works_service(get_jwt_identity())
+    x=your_works(get_jwt_identity())
+    return  x
 
 
 @professional.route('/profile', methods=['POST', 'GET'], endpoint='professional-profile')
