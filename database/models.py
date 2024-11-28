@@ -91,89 +91,36 @@ class Offer(db.Model):
     def __repr__(self):
         return f'<Offer {self.id} from {self.source} to {self.target}>'
 
-class Service(db.Model):
-    __tablename__ = 'services'
+class MetaData(db.Model):
+    __tablename__ = 'metadata'
 
     id = db.Column(Float, primary_key=True, default=lambda: secrets.randbelow(1_000_000_000))
-    service = db.Column(String(100),unique=True )
-    base = db.Column(Float,  )
+    dtype = db.Column(String(100),unique=True )
+    name = db.Column(String(100),  )
+    info = db.Column(String(100),  )
 
     def __repr__(self):
-        return f'<Service {self.service}>'
-
-class Location(db.Model):
-    __tablename__ = 'locations'
-
-    id = db.Column(Float, primary_key=True, default=lambda: secrets.randbelow(1_000_000_000))
-    city = db.Column(String(100),unique=True )
-    state = db.Column(String(100),  )
-
-    def __repr__(self):
-        return f'<Location {self.city}, {self.state}>'
-
-def get_customer_json(customer_id):#v
-    try:
-        customer = Customer.query.filter_by(id=customer_id).first()  # Query Customer by ID
-        if customer:
-            # Create a dictionary of customer data without the password field
-            customer_data = {
-                'id': customer.id,
-                'name': customer.name,
-                'city': customer.city,
-                'role': customer.role,
-                'email': customer.email
-            }
-            return jsonify(customer_data), 200
-        else:
-            return jsonify({"message": "Customer not found"}), 404
-    except Exception as e:
-        return jsonify({"message": f"Error: {str(e)}"}), 500
-
-
-def get_professional_json(professional_id):#v
-    try:
-        professional = Professional.query.filter_by(id=professional_id).first()  # Query Professional by ID
-        if professional:
-            # Create a dictionary of professional data without the password field
-            professional_data = {
-                'id': professional.id,
-                'name': professional.name,
-                'city': professional.city,
-                'role': professional.role,
-                'email': professional.email,
-                'service': professional.service,
-                'experience': professional.experience,
-                'approval': professional.approval,
-                'rating': professional.rating
-            }
-            return jsonify(professional_data), 200
-        else:
-            return jsonify({"message": "Professional not found"}), 404
-    except Exception as e:
-        return jsonify({"message": f"Error: {str(e)}"}), 500
-from flask import jsonify
+        return f'<metaData {self.dtype}>'
 
 def my_work(cust_id):
     try:
         sent_offers=Offer.query.filter_by(source=cust_id,status='pending').all()
         sent_offers_data = [{'offer id':sent_offer.id,'work_name':sent_offer.work_name,'amount':sent_offer.od_amount,'date':sent_offer.od_date
-                             ,'professional name':Professional.query.filter_by(id=sent_offer.target).first().name
-                             ,'prefessional id':Professional.query.filter_by(id=sent_offer.target).first().id
+                             ,'professional':get_professional(Professional.query.filter_by(id=sent_offer.target).first().id)
                              } for sent_offer in sent_offers] 
         rec_offers=Offer.query.filter_by(target=cust_id,status='pending').all()
         rec_data=[{'offer id':rec.id,'work_name':rec.work_name,'amount':rec.od_amount,'date':rec.od_date
-                             ,'professional name':Professional.query.filter_by(id=rec.source).first().name
-                             ,'prefessional id':Professional.query.filter_by(id=rec.source).first().id
+                             ,'professional':get_professional(Professional.query.filter_by(id=rec.source).first().id)
+                              
                              } for rec in rec_offers] 
         hist= Offer.query.filter(or_(Offer.source == cust_id, Offer.target ==cust_id),Offer.status.in_(['rejected', 'accepted'])).all()
         hist_data=   [{'offer id':histo.id,'work_name':histo.work_name,'amount':histo.od_amount,'date':histo.od_date
-                             ,'professional name':Professional.query.filter_by(id=histo.target).first().name if Customer.query.filter_by(id=histo.source).first() else Professional.query.filter_by(id=histo.source).first().name
-                             ,'prefessional id':Professional.query.filter_by(id=histo.target).first().id if Customer.query.filter_by(id=histo.source).first() else Professional.query.filter_by(id=histo.source).first().id,
+                             ,'professional':get_professional(Professional.query.filter_by(id=histo.target).first().id) if Customer.query.filter_by(id=histo.source).first() else get_professional(Professional.query.filter_by(id=histo.source).first().id)
+        ,'rating':Work.query.filter_by(name=histo.work_name).first().rating
         } for histo in hist]
         actw=Offer.query.filter(or_(Offer.source == cust_id, Offer.target ==cust_id),Offer.status.in_(['accepted'])).all()
         act_data=[{'offer id':act.id,'work_name':act.work_name,'amount':act.od_amount,'date':act.od_date
-                             ,'professional name':Professional.query.filter_by(id=act.target).first().name if Customer.query.filter_by(id=act.source).first() else Professional.query.filter_by(id=act.source).first().name,
-                             'prefessional id':Professional.query.filter_by(id=act.target).first().id if Customer.query.filter_by(id=act.source).first() else Professional.query.filter_by(id=act.source).first().id,
+                             ,'professional':get_professional(Professional.query.filter_by(id=act.target).first().id) if Customer.query.filter_by(id=act.source).first() else get_professional(Professional.query.filter_by(id=act.source).first().id),
                              } for act in actw] 
                               
         response={'sent':sent_offers_data,'received':rec_data,'active':act_data,'history':hist_data}
@@ -185,22 +132,20 @@ def your_works(prof_id):
     try:
         sent_offers=Offer.query.filter_by(source=prof_id,status='pending').all()
         sent_offers_data = [{'offer id':sent_offer.id,'work_name':sent_offer.work_name,'amount':sent_offer.od_amount,'date':sent_offer.od_date
-                             ,'customer name':Customer.query.filter_by(id=sent_offer.target).first().name
-                             ,'customer id':Customer.query.filter_by(id=sent_offer.target).first().id
+                             ,'customer':get_customer(Customer.query.filter_by(id=sent_offer.target).first().id)
                              } for sent_offer in sent_offers] 
         rec_offers=Offer.query.filter_by(target=prof_id,status='pending').all()
         rec_data=[{'offer id':rec.id,'work_name':rec.work_name,'amount':rec.od_amount,'date':rec.od_date
-                             ,'customer name':Customer.query.filter_by(id=rec.source).first().name
-                             ,'customer id':Customer.query.filter_by(id=rec.source).first().id
+                             ,'customer':get_customer(Customer.query.filter_by(id=rec.source).first().id)
                              } for rec in rec_offers] 
         hist= Offer.query.filter(or_(Offer.source == prof_id, Offer.target ==prof_id),Offer.status.in_(['rejected', 'accepted'])).all()
         hist_data=   [{'offer id':histo.id,'work_name':histo.work_name,'amount':histo.od_amount,'date':histo.od_date
-                             ,'customer name':Customer.query.filter_by(id=histo.source).first().name if Customer.query.filter_by(id=histo.source).first() else Customer.query.filter_by(id=histo.target).first().name
-                             ,'customer id':Customer.query.filter_by(id=histo.source).first().id if Customer.query.filter_by(id=histo.source).first() else Customer.query.filter_by(id=histo.target).first().id} for histo in hist]        
+                             ,'customer':get_customer(Customer.query.filter_by(id=histo.source).first().id) if Customer.query.filter_by(id=histo.source).first() else get_customer(Customer.query.filter_by(id=histo.target).first().id),
+                             'rating':Work.query.filter_by(name=histo.work_name).first().rating
+                             } for histo in hist]
         actw=Offer.query.filter(or_(Offer.source == prof_id, Offer.target ==prof_id),Offer.status.in_(['accepted'])).all()
         act_data=[{'offer id':act.id,'work_name':act.work_name,'amount':act.od_amount,'date':act.od_date
-                             ,'customer name':Customer.query.filter_by(id=act.source).first().name if Customer.query.filter_by(id=act.source).first() else Customer.query.filter_by(id=act.target).first().name
-                             ,'customer id':Customer.query.filter_by(id=act.source).first().id if Customer.query.filter_by(id=act.source).first() else Customer.query.filter_by(id=act.target).first().id} for act in actw] 
+                             ,'customer':get_customer(Customer.query.filter_by(id=act.source).first().id) if Customer.query.filter_by(id=act.source).first() else get_customer(Customer.query.filter_by(id=act.target).first().id)} for act in actw]
         data={'sent':sent_offers_data,'received':rec_data,'active':act_data,'history':hist_data}
         return jsonify(data),200
     except Exception as e:
@@ -218,32 +163,90 @@ def discover_works(prof_id): #v
         return jsonify({"message": f"Error: {str(e)}"}), 500
     return jsonify(works_data),200
 
-# Function to get all works  for a given customer_id 
+
+#use id to get key values
+def get_professional(professional_id):
+    try:
+        professional = Professional.query.get(professional_id)
+        if professional:
+            # Return the data as a dictionary, not as a Flask response
+            return {
+                'id': professional.id,
+                'name': professional.name,
+                'email': professional.email,
+                'service': professional.service,
+                'experience': professional.experience,
+                'approval': professional.approval,
+                'rating': professional.rating,
+                'city': professional.city
+            }
+        else:
+            return None
+    except Exception as e:
+        return {"error": str(e)}
+
+def get_customer(customer_id):
+    try:
+        customer = Customer.query.filter_by(id=customer_id).first()  # Query Customer by ID
+        if customer:
+            # Create a dictionary of customer data without the password field
+            customer_data = {
+                'id': customer.id,
+                'name': customer.name,
+                'city': customer.city,
+                'role': customer.role,
+                'email': customer.email
+            }
+            return customer_data
+        else:
+            return None
+    except Exception as e:
+        return {"error": str(e)}
+
+#admin usage
+def get_professionals_data():
+    # Query for approved and unapproved professionals
+    profs = Professional.query.filter_by(approval='T').all()
+    uprofs = Professional.query.filter_by(approval='F').all()
+
+    # Create data dictionaries using list comprehension
+    appro_data = [get_professional(profi.id) for profi in profs]
+    uappro_data = [get_professional(profi.id) for profi in uprofs]
+
+    # Filter out None values in case get_professional_json returned None for any professional
+    appro_data = [data for data in appro_data if data is not None]
+    uappro_data = [data for data in uappro_data if data is not None]
+
+    # Combine the data into a single dictionary
+    prof_data = {
+        'approved': appro_data,
+        'unapproved': uappro_data
+    }
+
+    # Return the JSON response
+    return jsonify(prof_data), 200
+
+
+# Function to get all types of works  for a given customer_id
 def new_work(cust_id): #v
     try:
         # Query all works for the given customer_id
-        works = Work.query.filter_by(customer_id=cust_id).all()
-        works_data = [{'id': work.id, 'name': work.name, 'description': work.description, 'amount': work.amount, 
-                       'date': work.date, 'service': work.service, 'address': work.address, 
-                       'status': work.status, 'rating': work.rating, 'city': work.city} for work in works]
-
+        open_works = Work.query.filter_by(customer_id=cust_id,status='open').all()
+        open_works_data = [{'id': open_work.id, 'name': open_work.name, 'description': open_work.description, 'amount': open_work.amount, 
+                       'date': open_work.date, 'service': open_work.service, 'address': open_work.address, 
+                         'city': open_work.city} for open_work in open_works]
+        done_works = Work.query.filter_by(customer_id=cust_id,status='done').all()
+        done_works_data = [{'id': done_work.id, 'name': done_work.name, 'description': done_work.description, 'amount': done_work.amount, 
+                       'date': done_work.date, 'service': done_work.service, 'address': done_work.address, 
+                        'rating': done_work.rating, 'city': done_work.city} for done_work in done_works]
+        closed_works = Work.query.filter_by(customer_id=cust_id,status='closed').all()
+        closed_works_data = [{'id': closed_work.id, 'name': closed_work.name, 'description': closed_work.description, 'amount': closed_work.amount, 
+                       'date': closed_work.date, 'service': closed_work.service, 'address': closed_work.address, 
+                         'city': closed_work.city} for closed_work in closed_works]
+        response_data = {'open_works': open_works_data, 'done_works': done_works_data, 'closed_works': closed_works_data}   
+        return jsonify(response_data), 200
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500  # Handle any errors
-    
-    return jsonify(works_data), 200  # Return JSON response
-    '''
-        # Query all offers where source or target matches the given user_id
-        offers = Offer.query.filter((Offer.source == user_id) | (Offer.target == user_id)).all()
-        offers_data = [{'id': offer.id, 'work_name': offer.work_name, 'source': offer.source, 'target': offer.target, 
-                        'od_amount': offer.od_amount, 'status': offer.status, 'od_date': offer.od_date, 
-                        'cr_date': offer.cr_date} for offer in offers]
-
-        # Combine works and offers into a single JSON response
-        response_data = {
-            'works': works_data,
-            'offers': offers_data
-        }
-'''
 
 
 
@@ -252,10 +255,10 @@ def make_data():
         db.session.add(Customer(name='admin', role='admin', password= generate_password_hash('admin'), city='Hyderabad'))
         db.session.add(Customer(name='cust1', email='cust1@gmail.com', password= generate_password_hash('8888'), city='Hyderabad'))
         db.session.add(Customer(name='cust2', password= generate_password_hash('8888'), city='Hyderabad', email='cust2@gmail.com'))
-        db.session.add(Professional(name='prof1', service='AC Repair', password= generate_password_hash('8888'), city='Hyderabad',approval="T"))
-        db.session.add(Professional(name='prof2', service='AC Repair', password= generate_password_hash('8888'), city='Hyderabad',approval="T"))
-        db.session.add(Location(city='Hyderabad', state='Telangana'))
-        db.session.add(Service(service='AC Repair', base=2000))
+        db.session.add(Professional(name='prof1', service='AC Repair', password= generate_password_hash('8888'), city='Hyderabad',approval="T",email='prof1@gmail.com'))
+        db.session.add(Professional(name='prof2', service='AC Repair', password= generate_password_hash('8888'), city='Hyderabad',approval="T",email='prof2@gmail.com'))
+        db.session.add(MetaData(name='Hyderabad', info='Telangana',dtype='city'))
+        db.session.add(MetaData(name='AC Repair', info=2000,dtype='service'))
         db.session.commit()
         cust1 = Customer.query.filter_by(name='cust1').first()
         cust2 = Customer.query.filter_by(name='cust2').first()

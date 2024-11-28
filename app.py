@@ -9,7 +9,7 @@ from endpoints.admin import admin
 from endpoints.customer import customer
 from endpoints.professional import professional
 # Import utilities and other stuff
-from database.models import db, make_data, Location, Service
+from database.models import db, make_data, MetaData
 from flask_cors import CORS
 
 
@@ -45,15 +45,14 @@ make_data()
 
 @app.route('/hello_world', methods=['GET'])
 def get_cities_and_services():
-    cities = Location.query.all()
-    services = Service.query.all()
-    cities_data = [{'id': city.id, 'name': city.city,'state':city.state} for city in cities]
-    services_data = [{'id': service.id, 'name': service.service, 'base': service.base} for service in services]
+    cities = MetaData.query.filter_by(dtype='city').all()
+    services = MetaData.query.filter_by(dtype='service').all()
+    cities_data = [{'id': city.id, 'name': city.name,'state':city.info} for city in cities]
+    services_data = [{'id': service.id, 'name': service.name, 'base': service.info} for service in services]
     return jsonify({'cities': cities_data, 'services': services_data})
 
 if __name__ == '__main__':
     environment = os.environ.get('ENVIRONMENT', 'dev')
     host = '127.0.0.1' if environment == 'dev' else '0.0.0.0'
     debug = True if environment == 'dev' else False
-
     app.run(host = host, debug = debug, port=5000)

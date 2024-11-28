@@ -4,7 +4,7 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 import time
 from endpoints.auth import role_required
 from datetime import datetime
-from database.models import db, Customer, Professional, Offer, Location, Service, func, Work, get_customer_json, my_work
+from database.models import db, Customer, Professional, Offer, func, Work, get_customer, my_work, new_work
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 import numpy as np
@@ -15,49 +15,55 @@ customer = Blueprint('customer', __name__)
 @role_required('customer') 
 def customer_new_work():
     if request.method == 'POST':
-        opr = request.json.get('operation')
-        if opr == "new":
-            name = request.json.get('name')
-            description = request.json.get('description')
-            amount = request.json.get('amount')
-            date = datetime.strptime(request.json.get('date'), '%Y-%m-%d')
-            service = request.json.get('service')
-            address = request.json.get('address')
-            customer_id =get_jwt_identity()
-            city = request.json.get('city')
-            db.session.add(Work(name=name, description=description, amount=amount, date=date, service=service, address=address, status='open', customer_id=customer_id, city=city))
-            db.session.commit()
-            return jsonify({'message': 'Work created'})
-        elif opr == "update":
-            #work_id = request.json.get('name') #fixed
-            name = request.json.get('name')
-            description = request.json.get('description')
-            amount = request.json.get('amount')
-            try:
+        try:
+            opr = request.json.get('operation')
+            if opr == "new":
+                name = request.json.get('name')
+                description = request.json.get('description')
+                amount = request.json.get('amount')
                 date = datetime.strptime(request.json.get('date'), '%Y-%m-%d')
-            except:
-                pass
-            service = request.json.get('service')
-            address = request.json.get('address')
-            #customer_id =get_jwt_identity()
-            city = request.json.get('city')
-            db.session.query(Work).filter_by(name=name).update({ 'description': description, 'amount': amount, 'date': date,
-                                                                    'service': service, 'address': address,  'city': city})
-            db.session.commit()
-            return jsonify({'message': 'Work updated'})
-        else:
-            return jsonify({'message': 'Invalid operation'})
-    return jsonify({'message': 'Customer new work'})
+                service = request.json.get('service')
+                address = request.json.get('address')
+                customer_id =get_jwt_identity()
+                city = request.json.get('city')
+                db.session.add(Work(name=name, description=description, amount=amount, date=date, service=service, address=address, status='open', customer_id=customer_id, city=city))
+                db.session.commit()
+                return jsonify({'message': 'Work created'})
+            elif opr == "update":
+                #work_id = request.json.get('name') #fixed
+                name = request.json.get('name')
+                description = request.json.get('description')
+                amount = request.json.get('amount')
+                try:
+                    date = datetime.strptime(request.json.get('date'), '%Y-%m-%d')
+                except:
+                    pass
+                service = request.json.get('service')
+                address = request.json.get('address')
+                #customer_id =get_jwt_identity()
+                city = request.json.get('city')
+                db.session.query(Work).filter_by(name=name).update({ 'description': description, 'amount': amount, 'date': date,
+                                                                        'service': service, 'address': address,  'city': city})
+                db.session.commit()
+                return jsonify({'message': 'Work updated'})
+            else:
+                return jsonify({'message': 'Invalid operation'})
+        except Exception as e:
+            return jsonify({'message': f" choose different name Error: {str(e)}"}), 500
+    return new_work(get_jwt_identity())
 
 
 @customer.route('/my_work', methods=['POST', 'GET'], endpoint='customer-my-work')
 @role_required('customer') 
 def customer_my_work():
     if request.method == 'POST':
-        work_name = request.json.get('work_name')
-        target = request.json.get('target')
-        o_amount= request.json.get('amount')
-        od_date = datetime.strptime(request.json.get('date'), '%Y-%m-%d')
+        try:
+            work_name = request.json.get('work_name')
+            target = request.json.get('target')
+            o_amount= request.json.get('amount')
+            od_date = datetime.strptime(request.json.get('date'), '%Y-%m-%d')
+        except:
+            return jsonify({'message': 'Invalid operation get'}), 400
         source = get_jwt_identity()
         db.session.add(Offer(work_name=work_name, target=target, od_amount=o_amount, od_date=od_date, source=source))
         try:
@@ -74,11 +80,14 @@ def customer_my_work():
 @role_required('customer') 
 def customer_my_work_update():
     if request.method == 'POST':
-        opr = request.json.get('operation')
-        oid = request.json.get('offer_id')
-        od_amount=request.json.get('amount')
-        od_date=datetime.strptime(request.json.get('date'), '%Y-%m-%d')
-        cid = get_jwt_identity()
+        try:
+            opr = request.json.get('operation')
+            oid = request.json.get('offer_id')
+            od_amount=request.json.get('amount')
+            od_date=datetime.strptime(request.json.get('date'), '%Y-%m-%d')
+            cid = get_jwt_identity()
+        except:
+            return jsonify({'message': 'Invalid operation get'}), 400
         if Offer.query.filter_by(id=oid).first():
             offl=Offer.query.filter_by(id=oid)
             offer =offl.first()
@@ -151,16 +160,18 @@ def customer_my_work_update():
                     return jsonify({'msg':'done'})
                 else:
                     return jsonify({'msg':'operation failed'})
-        return jsonify({'msg':'ayyeein post'})
-    return jsonify({'msg':'ayyeein'})
+        return jsonify({'msg':'checkpoint'})
+    return jsonify({'msg':'checkpoint last'})
 #####################
 @customer.route('/profile', methods=['POST', 'GET'], endpoint='customer-profile')
 @role_required('customer') 
 def customer_profile():
     if request.method == 'POST':
-        Customer.query.filter_by(id=get_jwt_identity()).update({'city': request.json.get('city')})
-        db.session.commit()
-        return jsonify({'message': 'City updated'})
-    
-    return get_customer_json(get_jwt_identity())
+        try:
+            Customer.query.filter_by(id=get_jwt_identity()).update({'city': request.json.get('city'),'email':request.json.get('email')})
+            db.session.commit()
+            return jsonify({'message': 'City updated'})
+        except Exception as e:
+            return jsonify({'message': f"Error: {str(e)}"}), 500
+    return get_customer(get_jwt_identity())
     

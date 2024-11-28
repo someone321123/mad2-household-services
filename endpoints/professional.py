@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 import time
 # Import the database and models
-from database.models import db, Customer, Professional, Offer ,Work , discover_works,your_works,get_professional_json
+from database.models import db, Customer, Professional, Offer ,Work , discover_works,your_works,get_professional
 
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -27,10 +27,13 @@ def approval_required(fn):
 @approval_required
 def professional_discover():
     if request.method == 'POST':
-        work_name = request.json.get('work_name')
-        target = int(request.json.get('target'))
-        o_amount= request.json.get('amount')
-        od_date = datetime.strptime(request.json.get('date'), '%Y-%m-%d')
+        try:
+            work_name = request.json.get('work_name')
+            target = int(request.json.get('target'))
+            o_amount= request.json.get('amount')
+            od_date = datetime.strptime(request.json.get('date'), '%Y-%m-%d')
+        except:
+            return jsonify({'message': 'Invalid operation get'}), 400
         source = get_jwt_identity()
         db.session.add(Offer(work_name=work_name, target=target, od_amount=o_amount, od_date=od_date, source=source))
         db.session.commit()
@@ -42,10 +45,13 @@ def professional_discover():
 @approval_required
 def professional_your_work():
     if request.method == 'POST':
-        opr = request.json.get('operation')
-        oid = request.json.get('offer_id')
-        od_amount=request.json.get('amount')
-        od_date=datetime.strptime(request.json.get('date'), '%Y-%m-%d')
+        try:
+            opr = request.json.get('operation')
+            oid = request.json.get('offer_id')
+            od_amount=request.json.get('amount')
+            od_date=datetime.strptime(request.json.get('date'), '%Y-%m-%d')
+        except:
+            return jsonify({'message': 'Invalid operation get'}), 400
         cid = get_jwt_identity()
         if Offer.query.filter_by(id=oid).first():
             offl=Offer.query.filter_by(id=oid)
@@ -107,7 +113,10 @@ def professional_your_work():
 @approval_required
 def professional_profile():
     if request.method == 'POST':
-        Professional.query.filter_by(id=get_jwt_identity()).update({'city': request.json.get('city')})
-        db.session.commit()
-        return jsonify({'message': 'City updated'})
-    return get_professional_json(get_jwt_identity())
+        try:
+            Professional.query.filter_by(id=get_jwt_identity()).update({'city': request.json.get('city'),'email':request.json.get('email')})
+            db.session.commit()
+            return jsonify({'message': 'City updated'})
+        except Exception as e:
+            return jsonify({'message': f"Error: {str(e)}"}), 500
+    return jsonify(get_professional(get_jwt_identity()))
