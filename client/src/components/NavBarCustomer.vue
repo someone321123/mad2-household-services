@@ -2,23 +2,46 @@
 <template>
     <nav>
       <ul>
-        <li><router-link to="/my-works">My Works</router-link></li>
-        <li><router-link to="/my-offers">My Offers</router-link></li>
-        <li><router-link to="/customer-profile">Profile</router-link></li>
-        <li><button @click="logout">Logout</button></li>
+        <li class="navbar-item"><router-link to="/new_work">New Works</router-link></li>
+        <li class="navbar-item"><router-link to="/my_works">My Works</router-link></li>
+        <li class="navbar-item"><router-link to="/customer_profile">Profile</router-link></li>
+        <li class="navbar-item"><button @click="logout">Logout</button></li>
       </ul>
     </nav>
   </template>
   
   <script>
   import { useAuthStore } from '../stores/AuthStore';
-  
-  export default {
-    setup() {
-      const authStore = useAuthStore();
-      const logout = () => authStore.logout();
-      return { logout };
-    },
-  };
+import { useRouter } from 'vue-router';
+
+export default {
+  setup() {
+    const authStore = useAuthStore();
+    const router = useRouter();
+
+    const logout = () => {
+      localStorage.clear();
+
+      authStore.logout();
+
+      router.push('/login');
+    };
+
+    return {
+      logout
+    };
+  },
+};
   </script>
-  
+    <style scoped>
+
+    .navbar-item a {
+      background-color: #ddd;
+      color: black;
+      text-decoration: none;
+      font-weight:bolder;}
+    
+    
+    
+    </style>
+    

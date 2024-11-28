@@ -95,7 +95,7 @@ class MetaData(db.Model):
     __tablename__ = 'metadata'
 
     id = db.Column(Float, primary_key=True, default=lambda: secrets.randbelow(1_000_000_000))
-    dtype = db.Column(String(100),unique=True )
+    dtype = db.Column(String(100) )
     name = db.Column(String(100),  )
     info = db.Column(String(100),  )
 
@@ -157,7 +157,7 @@ def discover_works(prof_id): #v
         worksz = Work.query.filter_by(service=Profes.service,status='open').all()
         works_data = [{ 'name': work.name, 'description': work.description, 'amount': work.amount, 
                         'date': work.date, 'address': work.address, 
-                        'customer name':Customer.query.filter_by(id=work.customer_id).first().name,
+                        'customer':get_customer(Customer.query.filter_by(id=work.customer_id).first().id),
                             'city': work.city} for work in worksz]
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500

@@ -82,14 +82,14 @@ def admin_statistics():
         try:
             entity = request.json.get('entity')
             if entity == "service":
-                service=request.json.get('service')
-                base=request.json.get('base')
+                service=request.json.get('name')
+                base=request.json.get('info')
                 db.session.add(MetaData(name=service, info=base,dtype='service'))
                 db.session.commit()
                 return jsonify({'message': 'Service added'})
             elif entity == "location":
-                city=request.json.get('city')
-                state = request.json.get('state')
+                city=request.json.get('name')
+                state = request.json.get('info')
                 db.session.add(MetaData(name=city, info=state,dtype='city'))
                 db.session.commit()
                 return jsonify({'message': 'Location added'})

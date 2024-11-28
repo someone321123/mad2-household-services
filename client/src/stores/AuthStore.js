@@ -1,10 +1,32 @@
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia';
 
-// Read Pinia docs here: https://pinia.vuejs.org/
-export const useAuthStore = defineStore("authStore", {
+export const useAuthStore = defineStore('auth', {
+  
   state: () => ({
-    someData: {}
+    token: null,
+    role: null,
+    
   }),
-  getters: {},
-  actions: {}
+  actions: {
+    
+    async register(userData) {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(userData),
+        });
+        if (!response.ok) {
+          throw new Error('Registration failed');
+        }
+        return await response.json();
+      } catch (error) {
+        console.error('Registration error:', error.message);
+        throw error;
+      }
+    },
+    logout() { },
+  },
 });
