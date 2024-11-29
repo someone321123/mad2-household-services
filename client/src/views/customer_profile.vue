@@ -31,7 +31,7 @@
   
   <script>
   import { ref, onMounted } from "vue";
-  
+  import { useRouter } from 'vue-router';
   export default {
     name: "CustomerProfile",
     setup() {
@@ -40,7 +40,7 @@
       const city = ref("");
       const cities = ref([]);
       const loading = ref(false);
-  
+      const router = useRouter();
       // Fetch customer data
       onMounted(async () => {
         try {
@@ -59,6 +59,7 @@
           }
         } catch (error) {
           console.error("Error fetching customer profile:", error);
+          router.push('/login');
         }
   
         // Fetch cities
@@ -95,6 +96,7 @@
   
           if (response.ok) {
             alert("Profile updated successfully!");
+            location.reload();
           } else {
             alert("Failed to update profile.");
           }

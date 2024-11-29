@@ -7,7 +7,7 @@
 
 <script>
 import { computed } from "vue";
-import { useAuthStore } from "./stores/AuthStore";
+
 import NavBarShared from "./components/NavBarShared.vue";
 import NavBarAdmin from "./components/NavBarAdmin.vue";
 import NavBarCustomer from "./components/NavBarCustomer.vue";
@@ -21,7 +21,7 @@ export default {
     NavBarProfessional,
   },
   setup() {
-    const authStore = useAuthStore();
+    
 
     const currentNavBar = computed(() => {
       if (localStorage.getItem("role")==null) {

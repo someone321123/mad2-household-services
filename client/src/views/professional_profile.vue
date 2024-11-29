@@ -33,6 +33,7 @@
   
   <script>
   import { ref, onMounted } from "vue";
+  import { useRouter } from 'vue-router';
   
   export default {
     name: "ProfessionalProfile",
@@ -41,6 +42,7 @@
       const email = ref("");
       const city = ref("");
       const cities = ref([]);
+      const router = useRouter();
   
       // Fetch professional data
       onMounted(async () => {
@@ -57,6 +59,7 @@
             city.value = professional.value.city;
           } else {
             console.error("Failed to fetch professional profile");
+            router.push('/login');
           }
         } catch (error) {
           console.error("Error fetching professional profile:", error);

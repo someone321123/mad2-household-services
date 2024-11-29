@@ -170,13 +170,14 @@ if (response.ok) {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
             body: JSON.stringify(offer.value),
           });
           if (response.ok) {
             alert("Offer sent successfully!");
             closeOfferForm();
+            location.reload();
           } else {
             alert("Failed to send offer");
           }

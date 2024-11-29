@@ -57,18 +57,24 @@
   
           // Navigate based on user role
           switch(data.role) {
-            case 'admin':
-              router.push({ name: 'admin_dashboard' });
-              break;
-            case 'customer':
-              router.push({ name: 'new_work' });
-              break;
-            case 'professional':
-              router.push({ name: 'discover' });
-              break;
-            default:
-              router.push({ name: 'home' });
-          }
+  case 'admin':
+    router.push({ name: 'admin_dashboard' }).then(() => {
+      router.go(0); // Recommended Vue Router method for full page reload
+    });
+    break;
+  case 'customer':
+    router.push({ name: 'new_work' }).then(() => {
+      router.go(0);
+    });
+    break;
+  case 'professional':
+    router.push({ name: 'discover' }).then(() => {
+      router.go(0);
+    });
+    break;
+  default:
+    router.push({ name: 'login' });
+}
         } catch (error) {
           errorMessage.value = error.message || 'Login failed';
         } finally {

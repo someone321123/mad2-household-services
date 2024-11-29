@@ -103,50 +103,76 @@ class MetaData(db.Model):
         return f'<metaData {self.dtype}>'
 
 def my_work(cust_id):
+    sent_offers_data=None;rec_data=None;rec_data=None;hist_data=None;actw=None;act_data=None
     try:
         sent_offers=Offer.query.filter_by(source=cust_id,status='pending').all()
         sent_offers_data = [{'offer id':sent_offer.id,'work_name':sent_offer.work_name,'amount':sent_offer.od_amount,'date':sent_offer.od_date
                              ,'professional':get_professional(Professional.query.filter_by(id=sent_offer.target).first().id)
                              } for sent_offer in sent_offers] 
+    except Exception as e:
+        print(f"Error: {str(e)}")
+    try:
+        
         rec_offers=Offer.query.filter_by(target=cust_id,status='pending').all()
         rec_data=[{'offer id':rec.id,'work_name':rec.work_name,'amount':rec.od_amount,'date':rec.od_date
                              ,'professional':get_professional(Professional.query.filter_by(id=rec.source).first().id)
                               
                              } for rec in rec_offers] 
+    except Exception as e:
+        print(f"Error: {str(e)}")
+    try:
         hist= Offer.query.filter(or_(Offer.source == cust_id, Offer.target ==cust_id),Offer.status.in_(['rejected', 'accepted'])).all()
         hist_data=   [{'offer id':histo.id,'work_name':histo.work_name,'amount':histo.od_amount,'date':histo.od_date
                              ,'professional':get_professional(Professional.query.filter_by(id=histo.target).first().id) if Customer.query.filter_by(id=histo.source).first() else get_professional(Professional.query.filter_by(id=histo.source).first().id)
-        ,'rating':Work.query.filter_by(name=histo.work_name).first().rating
+        ,'rating':Work.query.filter_by(name=histo.work_name).first().rating  if histo.status=='accepted' else 'rejected'
         } for histo in hist]
+    except Exception as e:
+        print(f"Error: {str(e)}")
+    try:
         actw=Offer.query.filter(or_(Offer.source == cust_id, Offer.target ==cust_id),Offer.status.in_(['accepted'])).all()
         act_data=[{'offer id':act.id,'work_name':act.work_name,'amount':act.od_amount,'date':act.od_date
                              ,'professional':get_professional(Professional.query.filter_by(id=act.target).first().id) if Customer.query.filter_by(id=act.source).first() else get_professional(Professional.query.filter_by(id=act.source).first().id),
                              } for act in actw] 
-                              
-        response={'sent':sent_offers_data,'received':rec_data,'active':act_data,'history':hist_data}
+    except Exception as e:
+        print(f"Error: {str(e)}")
+    try:
+        response={'sent':sent_offers_data if sent_offers_data else [],'received':rec_data if rec_data else [],'active':act_data if act_data else [],'history':hist_data if hist_data else []}
         return jsonify(response), 200  # Return JSON response
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500 
     
 def your_works(prof_id):
+    sent_offers_data=None;rec_data=None;rec_data=None;hist_data=None;actw=None;act_data=None
     try:
         sent_offers=Offer.query.filter_by(source=prof_id,status='pending').all()
         sent_offers_data = [{'offer id':sent_offer.id,'work_name':sent_offer.work_name,'amount':sent_offer.od_amount,'date':sent_offer.od_date
                              ,'customer':get_customer(Customer.query.filter_by(id=sent_offer.target).first().id)
                              } for sent_offer in sent_offers] 
+    except Exception as e:
+        print(f"Error: {str(e)}")
+    try:
         rec_offers=Offer.query.filter_by(target=prof_id,status='pending').all()
         rec_data=[{'offer id':rec.id,'work_name':rec.work_name,'amount':rec.od_amount,'date':rec.od_date
                              ,'customer':get_customer(Customer.query.filter_by(id=rec.source).first().id)
                              } for rec in rec_offers] 
+    except Exception as e:
+        print(f"Error: {str(e)}")
+    try:
         hist= Offer.query.filter(or_(Offer.source == prof_id, Offer.target ==prof_id),Offer.status.in_(['rejected', 'accepted'])).all()
         hist_data=   [{'offer id':histo.id,'work_name':histo.work_name,'amount':histo.od_amount,'date':histo.od_date
                              ,'customer':get_customer(Customer.query.filter_by(id=histo.source).first().id) if Customer.query.filter_by(id=histo.source).first() else get_customer(Customer.query.filter_by(id=histo.target).first().id),
-                             'rating':Work.query.filter_by(name=histo.work_name).first().rating
+                             'rating':Work.query.filter_by(name=histo.work_name).first().rating if histo.status=='accepted' else 'rejected'
                              } for histo in hist]
+    except Exception as e:
+        print(f"Error: {str(e)}")
+    try:
         actw=Offer.query.filter(or_(Offer.source == prof_id, Offer.target ==prof_id),Offer.status.in_(['accepted'])).all()
         act_data=[{'offer id':act.id,'work_name':act.work_name,'amount':act.od_amount,'date':act.od_date
                              ,'customer':get_customer(Customer.query.filter_by(id=act.source).first().id) if Customer.query.filter_by(id=act.source).first() else get_customer(Customer.query.filter_by(id=act.target).first().id)} for act in actw]
-        data={'sent':sent_offers_data,'received':rec_data,'active':act_data,'history':hist_data}
+    except Exception as e:
+        print(f"Error: {str(e)}")
+    try:
+        data={'sent':sent_offers_data if sent_offers_data else [],'received':rec_data if rec_data else [],'active':act_data if act_data else [],'history':hist_data if hist_data else []}
         return jsonify(data),200
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500  

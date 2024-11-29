@@ -1,30 +1,28 @@
 <!-- src/components/NavBarAdmin.vue -->
 <template>
-    <nav>
-      <ul>
+    <nav class="navbar">
+      <ul class="navbar-list">
+        <li class="navbar-item"><router-link to="/admin_dashboard">WELCOME ADMIN</router-link></li>
         <li class="navbar-item"><router-link to="/dashboard">Dashboard</router-link></li>
         <li class="navbar-item"><router-link to="/administrator">Administrator</router-link></li>
-        <li class="navbar-item"><router-link ><button @click="export">Export CSV</button></router-link></li>
-        <li class="navbar-item"><button @click="logout">Logout</button></li>
+        <li class="navbar-item"><router-link to="/admin_dashboard"><button @click="export">Export CSV</button></router-link></li>
+        <li class="navbar-item"><button class="logout" @click="logout">Logout</button></li>
       </ul>
     </nav>
   </template>
-  
   <script>
-import { useAuthStore } from '../stores/AuthStore';
 import { useRouter } from 'vue-router';
 
 export default {
   setup() {
-    const authStore = useAuthStore();
     const router = useRouter();
 
     const logout = () => {
       localStorage.clear();
 
-      authStore.logout();
-
-      router.push('/login');
+      router.push('/login').then(() => {
+        router.go(0);
+      });
     };
 
     return {
@@ -33,14 +31,47 @@ export default {
   },
 };
   </script>
- <style scoped>
+<style scoped>
+.navbar {
+background-color: #008000; /* Green background */
 
- .navbar-item a {
-   background-color: #ddd;
-   color: black;
-   text-decoration: none;
-   font-weight:bolder;}
- 
- 
- </style>
+top: 0;
+width: 100%;
+height: 50px; /* Fixed height */
+}
+
+.navbar-list {
+list-style-type: none;
+margin: 0;
+padding: 0;
+display: flex; /* Use flexbox for horizontal layout */
+justify-content: center; /* Center items horizontally */
+align-items: center; /* Center items vertically */
+height: 100%; /* Full height of navbar */
+}
+
+.navbar-item {
+margin: 0 10px; /* Space between items */
+}
+
+.navbar-item a, .navbar-item button {
+color: white;
+text-decoration: none;
+background: none;
+border: none;
+cursor: pointer;
+padding: 10px 15px;
+transition: background-color 0.3s ease;
+}
+
+.navbar-item a:hover, .navbar-item button.logout:hover {
+background-color: rgba(255, 255, 255, 0.2); /* Subtle hover effect */
+color: white;
+}
+
+.navbar-item button{
+font-size: inherit;
+font-family: inherit;
+}
+</style>
     

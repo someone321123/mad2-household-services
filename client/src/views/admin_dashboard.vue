@@ -36,7 +36,7 @@
   
   <script>
   import { ref, onMounted } from "vue";
-  
+  import { useRouter } from 'vue-router';
   export default {
     name: "AdminStatistics",
     setup() {
@@ -44,7 +44,7 @@
       const entity = ref("service");
       const name = ref("");
       const info = ref("");
-  
+      const router = useRouter();
       // Fetch admin statistics
       onMounted(async () => {
         try {
@@ -58,6 +58,7 @@
             statistics.value = await response.json();
           } else {
             console.error("Failed to fetch admin statistics");
+            router.push('/login');
           }
         } catch (error) {
           console.error("Error fetching admin statistics:", error);
