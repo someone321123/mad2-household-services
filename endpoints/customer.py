@@ -32,6 +32,7 @@ def customer_new_work():
             elif opr == "update":
                 #work_id = request.json.get('name') #fixed
                 name = request.json.get('name')
+                print(name)
                 description = request.json.get('description')
                 amount = request.json.get('amount')
                 try:
@@ -83,8 +84,7 @@ def customer_my_work_update():
         try:
             opr = request.json.get('operation')
             oid = request.json.get('offer_id')
-            od_amount=request.json.get('amount')
-            od_date=datetime.strptime(request.json.get('date'), '%Y-%m-%d')
+            
             cid = get_jwt_identity()
         except:
             return jsonify({'message': 'Invalid operation get'}), 400
@@ -103,11 +103,13 @@ def customer_my_work_update():
 
                     # 2. Update the Work where name matches
                     try:
+                        od_amount=request.json.get('od_amount')
+                        od_date=datetime.strptime(request.json.get('od_date'), '%m/%d/%Y')
                         workl.update({'status': 'closed', 'amount': od_amount, 'date': od_date})
                         logging.info('Successfully updated Work with name = %s to status = closed, amount = %s, date = %s', work_name, od_amount, od_date)
                     except Exception as e:
                         logging.error('Error updating Work with name = %s: %s', work_name, e)
-
+                        
                     # 3. Update the Offer where id matches
                     try:
                         offl.update({'status': 'accepted'})

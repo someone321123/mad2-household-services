@@ -48,8 +48,6 @@ def professional_your_work():
         try:
             opr = request.json.get('operation')
             oid = request.json.get('offer_id')
-            od_amount=request.json.get('amount')
-            od_date=datetime.strptime(request.json.get('date'), '%Y-%m-%d')
         except:
             return jsonify({'message': 'Invalid operation get'}), 400
         cid = get_jwt_identity()
@@ -68,7 +66,7 @@ def professional_your_work():
 
                     # 2. Update the Work where name matches
                     try:
-                        workl.update({'status': 'closed', 'amount': od_amount, 'date': od_date})
+                        workl.update({'status': 'closed', 'amount': offer.od_amount, 'date': datetime.strptime(offer.od_date, '%m/%d/%Y')})
                         logging.info('Successfully updated Work with name = %s to status = closed, amount = %s, date = %s', work_name, od_amount, od_date)
                     except Exception as e:
                         logging.error('Error updating Work with name = %s: %s', work_name, e)

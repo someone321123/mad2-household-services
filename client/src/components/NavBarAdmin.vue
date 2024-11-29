@@ -3,7 +3,7 @@
     <nav class="navbar">
       <ul class="navbar-list">
         <li class="navbar-item"><router-link to="/admin_dashboard">WELCOME ADMIN</router-link></li>
-        <li class="navbar-item"><router-link to="/dashboard">Dashboard</router-link></li>
+        <li class="navbar-item"><router-link to="/admin_dashboard">Dashboard</router-link></li>
         <li class="navbar-item"><router-link to="/administrator">Administrator</router-link></li>
         <li class="navbar-item"><router-link to="/admin_dashboard"><button @click="export">Export CSV</button></router-link></li>
         <li class="navbar-item"><button class="logout" @click="logout">Logout</button></li>

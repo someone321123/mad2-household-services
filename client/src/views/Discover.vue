@@ -56,7 +56,7 @@
           <form @submit.prevent="submitOffer">
             <div class="form-group">
               <label for="work_name">Work Name</label>
-              <input type="text" id="work_name" v-model="offer.work_name" required />
+              <input type="text" id="work_name" v-model="offer.work_name" disabled />
             </div>
             <div class="form-group">
               <label for="amount">Amount</label>
