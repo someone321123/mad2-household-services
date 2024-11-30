@@ -2,19 +2,14 @@
 import os
 from flask import Flask, render_template, jsonify
 from flask_jwt_extended import JWTManager
-
-# Import routes
-from endpoints.auth import auth_router
-from endpoints.admin import admin
-from endpoints.customer import customer
-from endpoints.professional import professional
-# Import utilities and other stuff
-from database.models import db, make_data, MetaData
+from flask_caching import Cache
 from flask_cors import CORS
+from config import LocalDevelopmentConfig
+import flask_excel
 
 
+from database.models import db, make_data, MetaData
 
-# Define a Flask instance
 app = Flask(__name__)
 
 # Configure an SQLite database
@@ -28,19 +23,51 @@ jwt = JWTManager(app)
 
 # Initialize the database
 db.init_app(app)
-
-
+cache = Cache(app)
+app.cache = cache
 CORS(app, resources={r"/*": {"origins": "*"}})
 
+
+#imoprt celery related things
+from celery import Celery, Task
+def celery_init_app(app: Flask) -> Celery:
+    class FlaskTask(Task):
+        def __call__(self, *args: object, **kwargs: object) -> object:
+            with app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery_app = Celery(app.name, task_cls=FlaskTask)
+    celery_app.config_from_object(LocalDevelopmentConfig)
+    return celery_app
+
+app.app_context().push()
+celery_app = celery_init_app(app)
+db.create_all()
+make_data()
+app.config.from_object(LocalDevelopmentConfig)
+
+
+celery_app = Celery(
+    'app',
+    broker='redis://localhost:6379/0',
+    backend='redis://localhost:6379/1',
+    include=['endpoints.admin']  # Include tasks module
+)
+
+
+from endpoints.auth import auth_router
+from endpoints.admin import admin
+from endpoints.customer import customer
+from endpoints.professional import professional
 # Register the router
 app.register_blueprint(auth_router, url_prefix = '/auth')
 app.register_blueprint(admin, url_prefix = '/admin')
 app.register_blueprint(customer, url_prefix = '/customer')
 app.register_blueprint(professional, url_prefix = '/professional')
 # Create the tables if they don't exist
-app.app_context().push()
-db.create_all()
-make_data()
+
+
+flask_excel.init_excel(app)
 
 
 @app.route('/hello_world', methods=['GET'])

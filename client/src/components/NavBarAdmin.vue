@@ -1,36 +1,72 @@
 <!-- src/components/NavBarAdmin.vue -->
 <template>
-    <nav class="navbar">
-      <ul class="navbar-list">
-        <li class="navbar-item"><router-link to="/admin_dashboard">WELCOME ADMIN</router-link></li>
-        <li class="navbar-item"><router-link to="/admin_dashboard">Dashboard</router-link></li>
-        <li class="navbar-item"><router-link to="/administrator">Administrator</router-link></li>
-        <li class="navbar-item"><router-link to="/admin_dashboard"><button @click="export">Export CSV</button></router-link></li>
-        <li class="navbar-item"><button class="logout" @click="logout">Logout</button></li>
-      </ul>
-    </nav>
-  </template>
-  <script>
+  <nav class="navbar">
+    <ul class="navbar-list">
+      <li class="navbar-item"><router-link to="/admin_dashboard">WELCOME ADMIN</router-link></li>
+      <li class="navbar-item"><router-link to="/admin_dashboard">Dashboard</router-link></li>
+      <li class="navbar-item"><router-link to="/administrator">Administrator</router-link></li>
+      <li class="navbar-item"><button @click="exportCSV">Export CSV</button></li>
+      <li class="navbar-item"><button class="logout" @click="logout">Logout</button></li>
+    </ul>
+  </nav>
+</template>
+
+<script>
 import { useRouter } from 'vue-router';
+import { ref } from 'vue';
 
 export default {
   setup() {
     const router = useRouter();
 
+    const exportCSV = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/admin/backend", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          },
+          // Remove body for GET request
+        });
+  
+        if (response.ok) {
+    /*      // Consider handling the response for CSV export
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'export.csv';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url); */
+          
+          alert("Export successful!");
+        } else {
+          const errorText = await response.text();
+          alert(`Export failed: ${errorText}`);
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("An error occurred during export");
+      }
+    };
+
     const logout = () => {
       localStorage.clear();
-
       router.push('/login').then(() => {
         router.go(0);
       });
     };
 
     return {
-      logout
+      logout,
+      exportCSV
     };
-  },
-};
-  </script>
+  }
+}
+</script>
 <style scoped>
 .navbar {
 background-color: #008000; /* Green background */

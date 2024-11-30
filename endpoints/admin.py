@@ -117,9 +117,20 @@ def admin_statistics():
                         })
     except Exception as e:
         return jsonify({'message': f"Error: {str(e)}"}), 500
-
-
+import flask_excel  
+from flask import send_file
 @admin.route('/backend', methods=['POST', 'GET'], endpoint='admin-backend')
 @role_required('admin')  
 def admin_backend():
-    return jsonify({'message': 'Admin backend'})
+    resource = Offer.query.all()
+
+    filename = f'offer_data.csv'
+    column_names = [column.name for column in Offer.__table__.columns]
+    print(column_names)
+    csv_out = flask_excel.make_response_from_query_sets(resource, column_names = column_names, file_type='csv' )
+
+    with open(f'./offer_data.csv', 'wb') as file:
+        file.write(csv_out.data)
+    
+    return send_file(filename)
+    return jsonify({'message': 'Admin backend'}) ,200
