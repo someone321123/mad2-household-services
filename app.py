@@ -8,7 +8,7 @@ from config import LocalDevelopmentConfig
 import flask_excel
 from celery import shared_task
 
-from database.models import db, make_data, MetaData, Customer, Offer, Professional, Work
+from database.models import db, make_data, MetaData, Customer, Offer, Professional, Work, your_works
 
 app = Flask(__name__)
 
@@ -76,15 +76,26 @@ def send_email(to, subject, content):
 @celery_app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(5.0, request_reminder.s() )
+    sender.add_periodic_task(10.0, monthly_report.s() )
 from mail_service import send_email
 import datetime
 
 @celery_app.task
 def request_reminder():
     for cust in Customer.query.all():
+        offers=[]
         for offer in Offer.query.filter_by(target=cust.id).all():
             if offer.status=='pending':
-                send_email(cust.email, f'New Offer for {offer.work_name}', f'<h1>you have a  new  pending offer {offer.work_name}</h1>')
+                offers.append(offer.work_name)
+        if cust.email is not None and offers:
+            send_email(cust.email, 'Request Reminder', f'Dear {cust.name}, Please check your request for the following work(s): {offers}')
+    return 'done'
+
+@celery_app.task
+def monthly_report():
+    for prof in Professional.query.all():
+        if prof.email is not None:
+            send_email(prof.email, 'Monthly Report', f'Dear {prof.name}, Please check your monthly report {render_template("monthly_report.html",works=your_works(prof.id))}')
     return 'done'
 
 @app.route('/hello_world', methods=['GET'])

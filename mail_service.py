@@ -20,4 +20,3 @@ def send_email(to, subject, content):
     with smtplib.SMTP(host=SMTP_SERVER, port=SMTP_PORT) as client:
         client.send_message(msg)
         client.quit()
-send_email('admin@example.com', 'Test', '<h1>Hello World</h1>')

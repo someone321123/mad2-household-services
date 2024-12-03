@@ -278,7 +278,7 @@ def new_work(cust_id): #v
 
 def make_data():
     if not Customer.query.filter_by(name='admin').first():
-        db.session.add(Customer(name='admin', role='admin', password= generate_password_hash('admin'), city='Hyderabad'))
+        db.session.add(Customer(name='admin', role='admin', password= generate_password_hash('admin'), city='Hyderabad', email='admin@example.com'))
         db.session.add(Customer(name='cust1', email='cust1@gmail.com', password= generate_password_hash('8888'), city='Hyderabad'))
         db.session.add(Customer(name='cust2', password= generate_password_hash('8888'), city='Hyderabad', email='cust2@gmail.com'))
         db.session.add(Professional(name='prof1', service='AC Repair', password= generate_password_hash('8888'), city='Hyderabad',approval="T",email='prof1@gmail.com'))

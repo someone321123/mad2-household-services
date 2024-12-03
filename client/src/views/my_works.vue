@@ -373,7 +373,7 @@ export default {
         amount: work.amount,
         date: new Date().toISOString().split('T')[0],
         professional_id: work.professional.id,
-        offer_id: work.offer_id,
+        offer_id: work.work_name,
       };
       isNegotiating.value = true;
     };
@@ -387,8 +387,8 @@ export default {
             "Authorization": `Bearer ${localStorage.getItem("token")}`,
           },
           body: JSON.stringify({
-            offer_id: negotiation.value.offer_id,
-            professional_id: negotiation.value.professional_id,
+            work_name: negotiation.value.offer_id,
+            target: negotiation.value.professional_id,
             amount: negotiation.value.amount,
             date: negotiation.value.date,
           }),
