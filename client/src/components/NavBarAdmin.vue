@@ -31,7 +31,6 @@ export default {
         });
   
         if (response.ok) {
-    /*      // Consider handling the response for CSV export
           const blob = await response.blob();
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
@@ -40,7 +39,7 @@ export default {
           document.body.appendChild(a);
           a.click();
           a.remove();
-          window.URL.revokeObjectURL(url); */
+          window.URL.revokeObjectURL(url); 
           
           alert("Export successful!");
         } else {

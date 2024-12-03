@@ -1,11 +1,11 @@
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
+from database.models import db, Customer, Professional, Offer
 
 SMTP_SERVER = "localhost"
 SMTP_PORT = 1025
-SENDER_EMAIL = 'blogAdmin@example'
+SENDER_EMAIL = 'ServicesAdmin@example.com'
 SENDER_PASSWORD = ''
 
 def send_email(to, subject, content):
@@ -20,3 +20,4 @@ def send_email(to, subject, content):
     with smtplib.SMTP(host=SMTP_SERVER, port=SMTP_PORT) as client:
         client.send_message(msg)
         client.quit()
+send_email('admin@example.com', 'Test', '<h1>Hello World</h1>')

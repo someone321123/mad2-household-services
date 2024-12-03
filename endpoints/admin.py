@@ -1,5 +1,5 @@
 # Import libraries
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request,current_app as app
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 import time
 from endpoints.auth import role_required
@@ -7,8 +7,11 @@ from endpoints.auth import role_required
 from database.models import db, Customer, Professional, Offer,MetaData, func, Work,get_professionals_data
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+cache = app.cache
 admin = Blueprint('admin', __name__)
 @admin.route('/dashboard', methods = ['POST','GET'], endpoint = 'admin-dashboard')
+@cache.cached(timeout=3)
 @role_required('admin')  
 def admin_dashboard():
     if request.method == 'POST':
@@ -127,10 +130,8 @@ def admin_backend():
     filename = f'offer_data.csv'
     column_names = [column.name for column in Offer.__table__.columns]
     print(column_names)
-    csv_out = flask_excel.make_response_from_query_sets(resource, column_names = column_names, file_type='csv' )
-
-    with open(f'./offer_data.csv', 'wb') as file:
-        file.write(csv_out.data)
+    with flask_excel.make_response_from_query_sets(resource, column_names, 'csv') as csv_out:
+        with open(f'./offer_data.csv', 'wb') as file:
+            file.write(csv_out.data)
     
     return send_file(filename)
-    return jsonify({'message': 'Admin backend'}) ,200

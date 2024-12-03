@@ -17,7 +17,7 @@ class Customer(db.Model):
     id = db.Column(Float, primary_key=True, default=lambda: secrets.randbelow(1_000_000_000))
     name = db.Column(String(100),  unique=True)
     password = db.Column(String(100))
-    city = db.Column(String(100))
+    city = db.Column(String(100), ForeignKey('metadata.name'))
     role = db.Column(String(100),  default='customer')
     email = db.Column(String(100),)
 
@@ -40,7 +40,7 @@ class Professional(db.Model):
     name = db.Column(String(100),    unique=True)
     service = db.Column(String(100),  )
     password = db.Column(String(1000))
-    city = db.Column(String(100) )
+    city = db.Column(String(100), ForeignKey('metadata.name'))
     experience = db.Column(Integer,  )
     approval = db.Column(String(100),  )
     rating = db.Column(Float, nullable=True)
@@ -67,10 +67,10 @@ class Work(db.Model):
     service = db.Column(String(100),  )
     address = db.Column(String(255),  )
     status = db.Column(String(50), default ='open')
-    customer_id = db.Column(Float,  )
-    professional_id = db.Column(Float,  )
+    customer_id = db.Column(Float,  ForeignKey('customers.id'))
+    professional_id = db.Column(Float,  ForeignKey('professionals.id'))
     rating = db.Column(Float, nullable=True)
-    city = db.Column(String(100),  )
+    city = db.Column(String(100), ForeignKey('metadata.name'))
 
     def __repr__(self):
         return f'<Work {self.name} - {self.status}>'
@@ -79,7 +79,7 @@ class Offer(db.Model):
     __tablename__ = 'offers'
 
     id = db.Column(Float, primary_key=True, default=lambda: secrets.randbelow(1_000_000_000))
-    work_name = db.Column(String(100),  )
+    work_name = db.Column(String(100), ForeignKey('works.name'))
     source = db.Column(Float,  )
     target = db.Column(Float,  )
     od_amount = db.Column(Float,  )
@@ -180,7 +180,7 @@ def your_works(prof_id):
 def discover_works(prof_id): #v
     try:
         Profes=Professional.query.filter_by(id=prof_id).first()
-        worksz = Work.query.filter_by(service=Profes.service,status='open').all()
+        worksz = Work.query.filter_by(city=Profes.city,status='open').all()
         works_data = [{ 'name': work.name, 'description': work.description, 'amount': work.amount, 
                         'date': work.date, 'address': work.address, 
                         'customer':get_customer(Customer.query.filter_by(id=work.customer_id).first().id),

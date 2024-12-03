@@ -6,9 +6,9 @@ from flask_caching import Cache
 from flask_cors import CORS
 from config import LocalDevelopmentConfig
 import flask_excel
+from celery import shared_task
 
-
-from database.models import db, make_data, MetaData
+from database.models import db, make_data, MetaData, Customer, Offer, Professional, Work
 
 app = Flask(__name__)
 
@@ -69,6 +69,23 @@ app.register_blueprint(professional, url_prefix = '/professional')
 
 flask_excel.init_excel(app)
 
+@shared_task(ignore_result=True)
+def send_email(to, subject, content):
+    send_email(to, subject, content)
+
+@celery_app.on_after_configure.connect
+def setup_periodic_tasks(sender, **kwargs):
+    sender.add_periodic_task(5.0, request_reminder.s() )
+from mail_service import send_email
+import datetime
+
+@celery_app.task
+def request_reminder():
+    for cust in Customer.query.all():
+        for offer in Offer.query.filter_by(target=cust.id).all():
+            if offer.status=='pending':
+                send_email(cust.email, f'New Offer for {offer.work_name}', f'<h1>you have a  new  pending offer {offer.work_name}</h1>')
+    return 'done'
 
 @app.route('/hello_world', methods=['GET'])
 def get_cities_and_services():
