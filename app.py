@@ -6,9 +6,10 @@ from flask_caching import Cache
 from flask_cors import CORS
 from config import LocalDevelopmentConfig
 import flask_excel
+import json
 from celery import shared_task
-
-from database.models import db, make_data, MetaData, Customer, Offer, Professional, Work, your_works
+from celery.schedules import crontab
+from database.models import db, make_data, MetaData, Customer, Offer, Professional, Work, your_works, report_helper
 
 app = Flask(__name__)
 
@@ -75,8 +76,8 @@ def send_email(to, subject, content):
 
 @celery_app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    sender.add_periodic_task(5.0, request_reminder.s() )
-    sender.add_periodic_task(10.0, monthly_report.s() )
+    sender.add_periodic_task(crontab(hour=17, minute=0), request_reminder.s(), name='request_reminder')
+    sender.add_periodic_task(crontab(day=1,hour=17, minute=0), monthly_report.s() , name='monthly_report')
 from mail_service import send_email
 import datetime
 
@@ -87,15 +88,25 @@ def request_reminder():
         for offer in Offer.query.filter_by(target=cust.id).all():
             if offer.status=='pending':
                 offers.append(offer.work_name)
+        offers=set(offers)
         if cust.email is not None and offers:
-            send_email(cust.email, 'Request Reminder', f'Dear {cust.name}, Please check your request for the following work(s): {offers}')
+            send_email(cust.email, 'Request Reminder', f'Dear {cust.name}, Please check your dashboard for the following work requests(s): {offers}')
     return 'done'
 
 @celery_app.task
 def monthly_report():
     for prof in Professional.query.all():
         if prof.email is not None:
-            send_email(prof.email, 'Monthly Report', f'Dear {prof.name}, Please check your monthly report {render_template("monthly_report.html",works=your_works(prof.id))}')
+            works_data = report_helper(prof.id)
+    
+            # If works_data is a Response object, extract the JSON
+            if hasattr(works_data, 'get_json'):
+                works = works_data.get_json()
+            elif isinstance(works_data, str):
+                works = json.loads(works_data)
+            else:
+                works = works_data
+            send_email(prof.email, 'Monthly Report', f'Dear {prof.name}, Please check your monthly report {render_template("monthly_report.html",works=works)}')
     return 'done'
 
 @app.route('/hello_world', methods=['GET'])

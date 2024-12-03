@@ -314,6 +314,7 @@ export default {
           alert("Negotiation submitted successfully");
           isNegotiating.value = false;
           // Refetch data to update the view
+          location.reload();
           await onMounted();
         } else {
           const errorText = await response.text();

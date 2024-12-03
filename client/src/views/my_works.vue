@@ -338,6 +338,7 @@ export default {
           alert(`${operation} successful`);
           // Refetch data to update the view
           await onMounted();
+          location.reload();
         } else {
           const errorText = await response.text();
           alert(`Failed to update offer: ${errorText}`);

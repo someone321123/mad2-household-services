@@ -85,6 +85,7 @@
   
           if (response.ok) {
             alert("Statistics updated successfully!");
+            location.reload();
           } else {
             alert("Failed to update statistics.");
           }
